@@ -34,7 +34,7 @@ class WeworkAppMsg:
         c = WeWorkClient(WEWORK_CORP_ID, app_secret, session=self._session_storage)
         self.clients[app_secret] = c
         return c
-    
+
 
     def on_post(self, req: Request, resp: Response, app_id, msg_type):
         """
@@ -57,11 +57,13 @@ class WeworkAppMsg:
                 app_id, users, content,
                 party_ids=groups, tag_ids=tags)
 
-        if msg_type == "markdown":
+        elif msg_type == "markdown":
             content = req.media["content"]
             resp.media = self._get_client(app_secret).message.send_markdown(
                 app_id, users, content,
                 party_ids=groups, tag_ids=tags)
+        else:
+            raise falcon.HTTPNotImplemented(description="I'm lazy")
 
 
 application = app = API()
