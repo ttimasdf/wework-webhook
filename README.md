@@ -2,6 +2,10 @@
 
 实现效果：使用企业微信的“自建应用”功能替代简陋的Webhook推送通知，能够在微信中查看推送消息内容（Webhook机器人的消息只能在企业微信中看到），简化应用消息开发流程，方便工具脚本接入。
 
+这个服务原本设计就考虑到了可以部署为serverless函数，用户可以自行尝试。作者没有给出配置方法的原因是：阿里云函数计算不好用（TLS配置麻烦），腾讯云函数计算不支持tablestore的某些依赖，会遇到（售后工程师无法解决的）运行时错误。可访问性与暴露服务的安全性问题。
+
+因此建议在家庭内网中自行部署，项目附带的Dockerfile可以在树莓派上成功构建并运行。
+
 ![](https://z.cdn.rabit.pw/imgs/2020/20200721113940.jpg)
 
 ## 填写配置文件
@@ -20,6 +24,8 @@ docker run -d --restart=always -p 8000:8000 --name hook weworkhook
 ```
 
 ## Webhook 调用
+
+### HTTP 调用
 
 以 httpie 举例。
 
@@ -51,4 +57,33 @@ content-type: application/json
     "errmsg": "ok",
     "invaliduser": ""
 }
+```
+
+### Home Assistant 调用
+
+1. 在配置文件中新建 `rest_command` 组件，内容如下。
+2. 在 `secrets.yaml` 中新增名为 `ww_auth_token` 的密钥，填入 `API_AUTH_KEY` 的值。
+3. 在其他 automation 中调用 `rest_command.wxwork` ，调用参数 `msg` 中加入推送消息内容即可。
+
+```yaml
+rest_command:
+  wxwork:
+    url: 'http://localhost:8000/wework/1000001/text'
+    method: POST
+    headers: { "X-WW-Auth": !secret ww_auth_token }
+    content_type: 'application/json; charset=utf-8'
+    payload: >
+      {
+        "content": "{{ msg }}"
+      }
+
+  wxwork_md:
+    url: 'http://localhost:8000/wework/1000001/md'
+    method: POST
+    headers: { "X-WW-Auth": !secret ww_auth_token }
+    content_type: 'application/json; charset=utf-8'
+    payload: >
+      {
+        "content": "{{ msg }}"
+      }
 ```
