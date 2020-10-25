@@ -19,6 +19,8 @@
 ```sh
 # Build
 docker build . --force-rm -t weworkhook
+# Development
+docker run -i -t -p 8000:8000 -v "$PWD:/app" --name hook weworkhook
 # Run
 docker run -d --restart=always -p 8000:8000 --name hook weworkhook
 ```
